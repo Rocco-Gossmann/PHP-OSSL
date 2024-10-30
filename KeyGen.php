@@ -16,20 +16,19 @@ class KeyGen
             $aConf['config'] = $sConfFile;
 
         $sPKey = openssl_pkey_new($aConf);
-        if (!$sPKey) echo openssl_error_string();
+        if (!$sPKey) throw new Exception(openssl_error_string(), Exception::KEYGEN_ERROR);
         else {
 
             $sPrKey = "";
             if (!openssl_pkey_export($sPKey, $sPrKey, null, $aConf))
-                echo "pkey_export error ", openssl_error_string();
+                throw new Exception("pkey_export error: " . openssl_error_string(), Exception::KEYGEN_ERROR);
             else {
                 $sPuKey = (openssl_pkey_get_details($sPKey) ?? [])['key'] ?? false;
 
                 if (empty($sPuKey))
-                    echo "pkey_export error ", openssl_error_string();
+                    throw new Exception("pkey_export error " . openssl_error_string(), Exception::KEYGEN_ERROR);
                 else {
-                    $sData = "Hello World\nHowAre you 😁";
-
+                    $sData = "Hello World\nHow are you 😁?";
                     $sEnc = "";
                     $sDec = "";
 
@@ -39,6 +38,8 @@ class KeyGen
                     if ($sDec == $sData) {
                         $sPublicKey = $sPuKey;
                         $sPrivateKey = $sPrKey;
+                    } else {
+                        throw new Exception("sanity check failed", Exception::KEYGEN_ERROR);
                     }
                 }
             }

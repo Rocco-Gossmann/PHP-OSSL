@@ -2,27 +2,31 @@
 
 namespace rogoss\OSSL;
 
-require_once __DIR__ . "/tCrypter.php";
+require_once __DIR__ . "/AsymCrypter.php";
 require_once __DIR__ . "/Exception.php";
 
-class Decrypter
-{
+class Decrypter extends AsymCrypter {
 
-    use tCrypter;
+    /** @ignore */
+    public function __construct() {
+        parent::__construct(
+            "openssl_public_decrypt", 
+            "openssl_private_decrypt",
+            fn($i) => json_decode($i, true)
+        );
+    }
 
     public function decrypt($sData, $bRaw = false)
     {
-        $sRaw = $bRaw ? $sData : base64_decode($sData);
         if (empty($this->sKey))
-            throw new Exception("no public key", Exception::MISSING_KEY);
+            throw new Exception("no key, use either \$this->publicKey or \$this->privateKey to set one", Exception::MISSING_KEY);
+
+        $sRaw = $bRaw ? $sData : base64_decode($sData);
 
         $sDec = "";
-        if (!openssl_public_decrypt($sRaw, $sDec, $this->sKey))
-            throw new Exception(openssl_error_string());
+        if (!($this->sCryptFunction)($sRaw, $sDec, $this->sKey))
+            return null;
 
-        if ($this->bJSON) $sDec = json_decode($sDec, true);
-
-        
-        return $sDec;
+        return ($this->hJSON)($sDec);
     }
 }
