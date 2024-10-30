@@ -34,6 +34,11 @@ class AsymCrypter
         return $this;
     }
 
+    
+    /**
+     * Enable this, if you want to en-/decrypt Arrays or objects
+     * @return 
+     */
     public function json(): static
     {
         $this->hJSON = $this->hJSONHandler;

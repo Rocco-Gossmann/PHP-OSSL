@@ -26,23 +26,34 @@ class OSSL
         return new Encrypter();
     }
 
-    public static function BasicCrypter($sPassPhrease, $iv = ""): OSSL
+    /**
+     * Symetric - Encryption
+     *
+     * @param string $sPassPhrase 
+     * @param string $iv 0 to 16 characters (less than 0 is padded with $sPassPhrase
+     * @return 
+     */
+    public static function BasicCrypter($sPassPhrase, $iv = ""): OSSL
     {
         $i = new static();
-        $i->sPassPhrease = $sPassPhrease;
+        $i->sPassPhrase = $sPassPhrase;
         $i->sIV = $iv;
 
         while (strlen($i->sIV) < 16)
-            $i->sIV .= $sPassPhrease;
+            $i->sIV .= $sPassPhrase;
 
         $i->sIV = substr($i->sIV, 0, 16);
         return $i;
     }
 
-    private $sPassPhrease = "";
+    private $sPassPhrase = "";
     private $sIV = "";
     private $bJSON = false;
 
+    /**
+     * Enable this, if you want to en-/decrypt Arrays or objects
+     * @return 
+     */
     public function json() : static {
         $this->bJSON = true; 
         return $this;
@@ -52,13 +63,13 @@ class OSSL
     {
         if ($this->bJSON) $sData = json_encode($sData);
 
-        return openssl_encrypt(
+        return ($tmp = openssl_encrypt(
             $sData,
             'aes-128-cbc',
-            $this->sPassPhrease,
+            $this->sPassPhrase,
             $bRaw ? OPENSSL_RAW_DATA : 0,
             $this->sIV
-        );
+        )) ? $tmp : null ;
     }
 
     public function decrypt($sData, $bRaw = false)
@@ -66,13 +77,13 @@ class OSSL
         $sDec = openssl_decrypt(
             $sData,
             'aes-128-cbc',
-            $this->sPassPhrease,
+            $this->sPassPhrase,
             $bRaw ? OPENSSL_RAW_DATA : 0,
             $this->sIV
         );
 
         if ($sDec === false)
-            throw new Exception(openssl_error_string(), Exception::OPENSSL_ERROR);
+            return null;
 
         if ($this->bJSON) $sDec = json_decode($sDec, true);
 
