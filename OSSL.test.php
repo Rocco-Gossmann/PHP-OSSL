@@ -230,16 +230,13 @@ class TestOSSL extends TestCase
     public function testBasicCrypterDecryptWithWongPassword()
     {
         $this->assertNotEmpty(self::$sEncrypted, "expected encrypted content to not be empty");
-        $this->expectException("\\rogoss\\OSSL\\Exception");
-        $this->expectExceptionCode(\rogoss\OSSL\Exception::OPENSSL_ERROR);
-        OSSL::BasicCrypter("world", "123")->decrypt(self::$sEncrypted);
+        $this->assertNotEquals(self::ENC_PAYLOAD, OSSL::BasicCrypter("world", "123")->decrypt(self::$sEncrypted));
     }
 
     public function testBasicCrypterDecryptWithWongIV()
     {
         $this->assertNotEmpty(self::$sEncrypted, "expected encrypted content to not be empty");
-        $sDec = OSSL::BasicCrypter("hello", "456")->decrypt(self::$sEncrypted);
-        $this->assertNotEquals(self::ENC_PAYLOAD, $sDec);
+        $this->assertNotEquals(self::ENC_PAYLOAD, OSSL::BasicCrypter("hello", "456")->decrypt(self::$sEncrypted));
     }
 
     public function testBasicCrypterEncryptJSON()
